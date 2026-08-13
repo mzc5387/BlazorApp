@@ -1,0 +1,82 @@
+@page "/"
+
+<PageTitle>Explore .NET Blazor</PageTitle>
+
+<div class="home-page">
+    <section class="hero" aria-labelledby="home-title">
+        <div class="hero__content">
+            <p class="eyebrow"><span></span> A small collection of useful data</p>
+            <h1 id="home-title">Find something worth <em>exploring.</em></h1>
+            <p class="hero__copy">
+                A hands-on Blazor project for browsing movie, television, local weather, and other data I found interesting through public APIs.
+            </p>
+            <div class="hero__actions">
+                <a class="button button--primary" href="movies">Explore movies <span aria-hidden="true">→</span></a>
+                <a class="button button--quiet" href="tvshows">Explore TV shows <span aria-hidden="true">→</span></a>
+                <a class="button button--quiet" href="weather">Check the forecast</a>
+            </div>
+        </div>
+
+        <div class="hero__art" aria-hidden="true">
+            <div class="orbit orbit--one"></div>
+            <div class="orbit orbit--two"></div>
+            <div class="data-card data-card--weather">
+                <span class="data-card__icon">☀</span>
+                <div><small>CAMDEN COUNTY</small><strong>Local weather</strong></div>
+            </div>
+            <div class="data-card data-card--film">
+                <span class="data-card__icon">▶</span>
+                <div><small>TMDB</small><strong>Movies &amp; shows</strong></div>
+            </div>
+            <div class="signal"><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+    </section>
+
+    <section class="explore-section" aria-labelledby="explore-title">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow"><span></span> Start here</p>
+                <h2 id="explore-title">Choose an API to explore</h2>
+            </div>
+            <p>Live data, simple interfaces, and a few things I find interesting.</p>
+        </div>
+
+        <div class="explore-grid">
+            <a class="explore-card explore-card--movies" href="movies">
+                <span class="explore-card__number">01</span>
+                <span class="explore-card__glyph" aria-hidden="true">⌕</span>
+                <h3>Search movies</h3>
+                <p>Look up films, ratings, release dates, and details from TMDB.</p>
+                <span class="explore-card__link">Browse movies <b aria-hidden="true">→</b></span>
+            </a>
+
+            <a class="explore-card explore-card--shows" href="tvshows">
+                <span class="explore-card__number">02</span>
+                <span class="explore-card__glyph" aria-hidden="true">▣</span>
+                <h3>Search TV shows</h3>
+                <p>Discover series and dig into the data behind the shows you follow.</p>
+                <span class="explore-card__link">Browse TV shows <b aria-hidden="true">→</b></span>
+            </a>
+
+            <a class="explore-card explore-card--weather" href="weather">
+                <span class="explore-card__number">03</span>
+                <span class="explore-card__glyph" aria-hidden="true">☼</span>
+                <h3>Local weather</h3>
+                <p>See the latest National Weather Service forecast for Camden County.</p>
+                <span class="explore-card__link">View forecast <b aria-hidden="true">→</b></span>
+            </a>
+        </div>
+    </section>
+
+    <section class="discovery" aria-labelledby="discovery-title">
+        <div class="discovery__copy">
+            <p class="eyebrow"><span></span> No search term needed</p>
+            <h2 id="discovery-title">See what’s popular right now.</h2>
+            <p>Browse the titles currently getting the most attention on TMDB, then open a card for the cast and more context.</p>
+        </div>
+        <div class="discovery__links">
+            <a href="topmovies"><span>Top movies</span><b aria-hidden="true">↗</b></a>
+            <a href="toptvshows"><span>Top TV shows</span><b aria-hidden="true">↗</b></a>
+        </div>
+    </section>
+</div>

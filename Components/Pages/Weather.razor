@@ -1,0 +1,185 @@
+@page "/weather"
+@inject IWeatherService WeatherService
+@inject ILogger<Weather> Logger
+
+<PageTitle>Camden County Weather</PageTitle>
+
+<h1>Camden County, NJ Weather</h1>
+
+<div class="weather-page__intro">
+    <p>Forecast data provided by the National Weather Service.</p>
+    
+</div>
+<div class="mb-3">
+    <button type="button" class="btn btn-outline-primary" data-bs-toggle="offcanvas" data-bs-target="#local-radar" aria-controls="local-radar">
+        View local radar
+    </button>
+</div>
+
+<div class="offcanvas offcanvas-end weather-radar-offcanvas" tabindex="-1" id="local-radar" aria-labelledby="local-radar-title">
+    <div class="offcanvas-header">
+        <h2 class="offcanvas-title" id="local-radar-title">Camden County local radar</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <iframe class="radar-frame"
+                src="https://radar.weather.gov/station/KDIX/standard"
+                title="National Weather Service radar for the Fort Dix, New Jersey area">
+        </iframe>
+        <p class="radar-attribution">
+            Radar data: <a href="https://radar.weather.gov/station/KDIX/standard" target="_blank" rel="noopener noreferrer">National Weather Service (opens in a new tab)</a>.
+        </p>
+    </div>
+</div>
+
+@if (errorMessage is not null)
+{
+    <div class="alert alert-warning" role="alert">
+        @errorMessage
+    </div>
+}
+else if (forecastPeriods is null)
+{
+    <p><em>Loading the National Weather Service forecast...</em></p>
+}
+else
+{
+    @* <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Period</th>
+                    <th>Conditions</th>
+                    <th>Temperature</th>
+                    <th>Wind</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var period in forecastPeriods)
+                {
+                    <tr>
+                        <td>@period.Name</td>
+                        <td>@period.ShortForecast</td>
+                        <td>@period.Temperature&deg;@period.TemperatureUnit</td>
+                        <td>@period.WindDirection @period.WindSpeed</td>
+                        <td>@period.DetailedForecast</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div> *@
+    <div class="mb-5">
+        @foreach (var week in forecastPeriods
+        .GroupBy(period => GetWeekStart(period.StartTime))
+        .OrderBy(group => group.Key))
+        {
+            <section class="forecast-week" aria-labelledby="week-@week.Key.ToString("yyyyMMdd")">
+                <h2 class="forecast-week__title" id="week-@week.Key.ToString("yyyyMMdd")">
+                    Week of @week.Key.ToString("MMMM d")
+                </h2>
+
+                <div class="forecast-grid">
+                    @foreach (var day in week.GroupBy(period => period.StartTime.Date).OrderBy(group => group.Key))
+                    {
+                        var dailyPeriods = day.OrderBy(period => period.StartTime).ToList();
+                        var daytime = dailyPeriods.FirstOrDefault(period => !IsNightPeriod(period)) ?? dailyPeriods.First();
+                        var nighttime = dailyPeriods.Count > 1
+                            ? dailyPeriods.FirstOrDefault(period => IsNightPeriod(period)) ?? dailyPeriods.Last()
+                            : null;
+
+                        <article class="forecast-card">
+                            <div class="forecast-card__heading">
+                                <div>
+                                    <h3>@day.Key.ToString("dddd")</h3>
+                                    <time datetime="@day.Key.ToString("yyyy-MM-dd")">
+                                        @day.Key.ToString("MMMM d")
+                                    </time>
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(daytime.Icon))
+                                {
+                                    <img src="@daytime.Icon"
+                                        alt="@daytime.ShortForecast"
+                                        class="forecast-icon" />
+                                }
+                            </div>
+
+                            <div class="forecast-day-night">
+                                <div class="forecast-slot">
+                                    <div class="forecast-slot__label">Day</div>
+                                    <div class="forecast-temperature forecast-temperature--small">
+                                        @daytime.Temperature<span>°@daytime.TemperatureUnit</span>
+                                    </div>
+                                    <p class="forecast-condition">@daytime.ShortForecast</p>
+                                </div>
+
+                                @if (nighttime is not null)
+                                {
+                                    <div class="forecast-slot forecast-slot--night">
+                                        <div class="forecast-slot__label">Night</div>
+                                        <div class="forecast-temperature forecast-temperature--small">
+                                            @nighttime.Temperature<span>°@nighttime.TemperatureUnit</span>
+                                        </div>
+                                        <p class="forecast-condition">@nighttime.ShortForecast</p>
+                                    </div>
+                                }
+                            </div>
+
+                            <dl class="forecast-details">
+                                <div>
+                                    <dt>Wind</dt>
+                                    <dd>@daytime.WindDirection @daytime.WindSpeed</dd>
+                                </div>
+                            </dl>
+
+                            <p class="forecast-summary">@daytime.DetailedForecast</p>
+                        </article>
+                    }
+                </div>
+            </section>
+        }
+    </div>
+}
+
+@code {
+    private IReadOnlyList<WeatherPeriod>? forecastPeriods;
+    private string? errorMessage;
+
+    private static DateTime GetWeekStart(DateTimeOffset date)
+    {
+        var localDate = date.Date;
+        var daysSinceMonday = ((int)localDate.DayOfWeek + 6) % 7;
+        return localDate.AddDays(-daysSinceMonday);
+    }
+
+    private static bool IsNightPeriod(WeatherPeriod period)
+    {
+        if (period.Name.Contains("Night", StringComparison.OrdinalIgnoreCase) ||
+            period.Name.Contains("Evening", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var hour = period.StartTime.LocalDateTime.Hour;
+        return hour >= 18 || hour < 6;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            forecastPeriods = await WeatherService.GetCamdenCountyForecastAsync();
+        }
+        catch (OperationCanceledException ex)
+        {
+            Logger.LogWarning(ex, "The National Weather Service request timed out.");
+            errorMessage = "The National Weather Service took too long to respond. Please try again shortly.";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Unable to load the National Weather Service forecast.");
+            errorMessage = "The National Weather Service forecast is currently unavailable. Please try again shortly.";
+        }
+    }
+}
